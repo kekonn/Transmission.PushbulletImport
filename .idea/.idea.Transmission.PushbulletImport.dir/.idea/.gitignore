@@ -1,0 +1,10 @@
+﻿# Default ignored files
+/workspace.xml
+
+# Rider
+.idea/*
+
+# C#
+obj/*
+bin/*
+*.cache
