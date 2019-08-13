@@ -424,3 +424,6 @@ fabric.properties
 .idea/caches/build_file_checksums.ser
 
 # End of https://www.gitignore.io/api/rider,csharp
+
+# Default ignored files
+/workspace.xml# Created by .ignore support plugin (hsz.mobi)
