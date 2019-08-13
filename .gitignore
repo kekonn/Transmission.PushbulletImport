@@ -427,3 +427,12 @@ fabric.properties
 
 # Default ignored files
 /workspace.xml# Created by .ignore support plugin (hsz.mobi)
+.idea/.idea.Transmission.PushbulletImport.dir/.idea/contentModel.xml
+.idea/.idea.Transmission.PushbulletImport.dir/.idea/encodings.xml
+.idea/.idea.Transmission.PushbulletImport.dir/.idea/indexLayout.xml
+.idea/.idea.Transmission.PushbulletImport.dir/.idea/modules.xml
+.idea/.idea.Transmission.PushbulletImport.dir/.idea/projectSettingsUpdater.xml
+.idea/.idea.Transmission.PushbulletImport.dir/.idea/vcs.xml
+.idea/.idea.Transmission.PushbulletImport.dir/riderModule.iml
+bin/
+obj/
