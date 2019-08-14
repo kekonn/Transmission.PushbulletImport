@@ -1,12 +1,17 @@
 ﻿using System;
+using CommandLine;
+using Transmission.PushbulletImport.Commands;
 
 namespace Transmission.PushbulletImport
 {
-    class Program
+    public static class Program
     {
-        static void Main(string[] args)
+        public static int Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            return CommandLine.Parser.Default.ParseArguments<Pull.PullOptions>(args)
+                .MapResult(
+                    Pull.Execute,
+                    errs => 1);
         }
     }
 }

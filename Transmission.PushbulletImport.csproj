@@ -8,6 +8,8 @@
 
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.6.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="2.2.4" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.2.0" />
     <PackageReference Include="PushBulletSharp" Version="3.1.0" />
     <PackageReference Include="Transmission.API.RPC" Version="2.0.0" />
   </ItemGroup>
