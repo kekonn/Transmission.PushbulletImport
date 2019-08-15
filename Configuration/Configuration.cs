@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using Microsoft.Extensions.Configuration;
+using System.Linq;
 using PushbulletSharp;
 using PushbulletSharp.Models.Responses;
 
@@ -15,7 +16,22 @@ namespace Transmission.PushbulletImport.Configuration
         public IConfigurationRoot ApplicationConfig { get; private set; }
 
         #region Pushbullet Settings
-        public PushbulletClient PBClient { get; private set; }
+
+        private PushbulletClient _pbClient;
+
+        public PushbulletClient PBClient
+        {
+            get
+            {
+                if (_pbClient == null)
+                {
+                    PushbulletSetup();
+                }
+
+                return _pbClient;
+            }
+        }
+
         public Subscription PBChannelSubscription { get; private set; }
         
         private const string ApiEnvironmentKey = EnvironmentConfigPrefix + "PBAPI";
@@ -39,6 +55,28 @@ namespace Transmission.PushbulletImport.Configuration
             }
         }
         #endregion
+
+        #region Transmission Settings
+
+        private const string TransmissionSectionKey = "Transmission";
+        private const string TransmissionHostKey = "Host";
+        private const string TransmissionHostEnvironmentKey = EnvironmentConfigPrefix + "THOST";
+        
+        private API.RPC.Client _tClient; 
+        public API.RPC.Client TransmissionClient
+        {
+            get
+            {
+                if (_tClient == null)
+                {
+                    TorrentClientSetup();
+                }
+
+                return _tClient;
+            }
+        }
+
+        #endregion
         
         static Configuration()
         {
@@ -53,18 +91,18 @@ namespace Transmission.PushbulletImport.Configuration
                 .AddEnvironmentVariables(prefix: EnvironmentConfigPrefix);
 
             ApplicationConfig = config.Build();
-
-            PushbulletSetup();
         }
 
+        #region Pushbullet
         private void PushbulletSetup()
         {
             var apiKey = GetPBApiKey();
 
-            PBClient = new PushbulletClient(apiKey, TimeZoneInfo.Local);
+            _pbClient = new PushbulletClient(apiKey, TimeZoneInfo.Local);
 
             PBChannelSubscription = PBClient.SubscribeToChannel(GetChannelTag());
         }
+        
 
         private string GetPBApiKey()
         {
@@ -98,5 +136,34 @@ namespace Transmission.PushbulletImport.Configuration
 
             return channelTag;
         }
+        #endregion
+
+        #region Transmission
+
+        private void TorrentClientSetup()
+        {
+            var hostName = GetTransmissionHostname();
+            
+            _tClient = new API.RPC.Client(hostName);
+        }
+
+        private string GetTransmissionHostname()
+        {
+            var hostname = ApplicationConfig[ApiEnvironmentKey];
+            if (string.IsNullOrWhiteSpace(hostname))
+            {
+                var configSection = ApplicationConfig.GetSection(TransmissionSectionKey);
+                hostname = configSection[TransmissionHostKey];
+            }
+
+            if (string.IsNullOrEmpty(hostname))
+            {
+                throw new ApplicationException("Please specify a Transmission hostname.");
+            }
+
+            return hostname;
+        }
+
+        #endregion
     }
 }
