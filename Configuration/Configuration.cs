@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using Microsoft.Extensions.Configuration;
-using System.Linq;
 using PushbulletSharp;
 using PushbulletSharp.Models.Responses;
 
@@ -31,15 +30,14 @@ namespace Transmission.PushbulletImport.Configuration
                 return _pbClient;
             }
         }
-
-        public Subscription PBChannelSubscription { get; private set; }
+        public string PBTargetDeviceId { get; private set; }
         
         private const string ApiEnvironmentKey = EnvironmentConfigPrefix + "PBAPI";
-        private const string ChannelEnvironmentKey = EnvironmentConfigPrefix + "CHANNEL";
+        private const string DeviceEnvironmentKey = EnvironmentConfigPrefix + "PBDEVICE";
         
         private const string PBSectionKey = "Pushbullet";
         private const string ApiKeyConfigKey = "Pushbullet API key";
-        private const string ChannelConfigKey = "Channel tag";
+        private const string DeviceConfigKey = "Target device";
 
         private IConfigurationSection PushbulletConfigSection
         {
@@ -54,6 +52,7 @@ namespace Transmission.PushbulletImport.Configuration
                 return pbConfigSection;
             }
         }
+        
         #endregion
 
         #region Transmission Settings
@@ -99,8 +98,7 @@ namespace Transmission.PushbulletImport.Configuration
             var apiKey = GetPBApiKey();
 
             _pbClient = new PushbulletClient(apiKey, TimeZoneInfo.Local);
-
-            PBChannelSubscription = PBClient.SubscribeToChannel(GetChannelTag());
+            PBTargetDeviceId = GetDeviceId();
         }
         
 
@@ -120,21 +118,21 @@ namespace Transmission.PushbulletImport.Configuration
             return apiKey;
         }
 
-        private string GetChannelTag()
+        private string GetDeviceId()
         {
-            var channelTag = ApplicationConfig[ChannelEnvironmentKey];
+            var deviceId = ApplicationConfig[DeviceEnvironmentKey];
 
-            if (string.IsNullOrWhiteSpace(channelTag))
+            if (string.IsNullOrWhiteSpace(deviceId))
             {
-                channelTag = PushbulletConfigSection[ChannelConfigKey];
+                deviceId = PushbulletConfigSection[DeviceConfigKey];
             }
 
-            if (string.IsNullOrEmpty(channelTag))
+            if (string.IsNullOrEmpty(deviceId))
             {
-                throw new ApplicationException("Please specify a Pushbullet channel tag");
+                throw new ApplicationException("Please specify a Pushbullet target device id");
             }
 
-            return channelTag;
+            return deviceId;
         }
         #endregion
 
