@@ -10,8 +10,14 @@
     <PackageReference Include="CommandLineParser" Version="2.6.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="2.2.4" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.2.0" />
-    <PackageReference Include="PushBulletSharp" Version="3.1.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
     <PackageReference Include="Transmission.API.RPC" Version="2.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="PushbulletSharp, Version=3.1.0.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\PushbulletSharp\PushbulletSharp\bin\Release\netstandard20\PushbulletSharp.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

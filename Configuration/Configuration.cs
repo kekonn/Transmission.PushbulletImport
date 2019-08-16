@@ -1,7 +1,9 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using Microsoft.Extensions.Configuration;
 using PushbulletSharp;
+using PushbulletSharp.Models.Requests;
 using PushbulletSharp.Models.Responses;
 
 namespace Transmission.PushbulletImport.Configuration
@@ -31,9 +33,11 @@ namespace Transmission.PushbulletImport.Configuration
             }
         }
         public string PBTargetDeviceId { get; private set; }
+        public Device PBServerDevice { get; private set; }
+        private const string PBDeviceName = "Transmisson Server";
         
-        private const string ApiEnvironmentKey = EnvironmentConfigPrefix + "PBAPI";
-        private const string DeviceEnvironmentKey = EnvironmentConfigPrefix + "PBDEVICE";
+        private const string ApiEnvironmentKey = "PBAPI";
+        private const string DeviceEnvironmentKey = "PBDEVICE";
         
         private const string PBSectionKey = "Pushbullet";
         private const string ApiKeyConfigKey = "Pushbullet API key";
@@ -59,7 +63,7 @@ namespace Transmission.PushbulletImport.Configuration
 
         private const string TransmissionSectionKey = "Transmission";
         private const string TransmissionHostKey = "Host";
-        private const string TransmissionHostEnvironmentKey = EnvironmentConfigPrefix + "THOST";
+        private const string TransmissionHostEnvironmentKey = "THOST";
         
         private API.RPC.Client _tClient; 
         public API.RPC.Client TransmissionClient
@@ -86,7 +90,7 @@ namespace Transmission.PushbulletImport.Configuration
         {
             var config = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile(ConfigFileName)
+                .AddJsonFile(ConfigFileName, optional: true)
                 .AddEnvironmentVariables(prefix: EnvironmentConfigPrefix);
 
             ApplicationConfig = config.Build();
@@ -97,10 +101,46 @@ namespace Transmission.PushbulletImport.Configuration
         {
             var apiKey = GetPBApiKey();
 
-            _pbClient = new PushbulletClient(apiKey, TimeZoneInfo.Local);
-            PBTargetDeviceId = GetDeviceId();
+            _pbClient = new PushbulletClient(accessToken:apiKey, TimeZoneInfo.Local);
+            PBTargetDeviceId = GetTargetDeviceId();
+            PBServerDeviceSetup();
         }
-        
+
+        private void PBServerDeviceSetup()
+        {
+            PBServerDevice = DoesPBDeviceAlreadyExist(PBDeviceName)
+                ? GetPBDevice(PBDeviceName)
+                : CreatePBDevice(PBDeviceName);
+        }
+
+        private bool DoesPBDeviceAlreadyExist(string nickname = null, string deviceId = null)
+        {
+            return PBClient.CurrentUsersDevices(true).Devices
+                .Any(d => d.Nickname.Equals(nickname) || d.Iden.Equals(deviceId));
+        }
+
+        private Device GetPBDevice(string nickname = null, string deviceId = null, bool showActiveOnly = true)
+        {
+            return PBClient.CurrentUsersDevices(showActiveOnly).Devices
+                .First(d => d.Nickname.Equals(nickname) || d.Iden.Equals(deviceId));
+        }
+
+        private Device CreatePBDevice(string nickname, string model = null, string manufacturer = null, int? appVersion = null)
+        {
+            var newDevice = new Device()
+            {
+                Nickname = nickname,
+                Model = model,
+                Manufacturer = manufacturer
+            };
+
+            if (appVersion.HasValue)
+            {
+                newDevice.AppVersion = appVersion.Value;
+            }
+
+            return PBClient.CreateDevice(newDevice);
+        }
 
         private string GetPBApiKey()
         {
@@ -118,7 +158,7 @@ namespace Transmission.PushbulletImport.Configuration
             return apiKey;
         }
 
-        private string GetDeviceId()
+        private string GetTargetDeviceId()
         {
             var deviceId = ApplicationConfig[DeviceEnvironmentKey];
 
@@ -134,6 +174,7 @@ namespace Transmission.PushbulletImport.Configuration
 
             return deviceId;
         }
+
         #endregion
 
         #region Transmission
@@ -147,7 +188,7 @@ namespace Transmission.PushbulletImport.Configuration
 
         private string GetTransmissionHostname()
         {
-            var hostname = ApplicationConfig[ApiEnvironmentKey];
+            var hostname = ApplicationConfig[TransmissionHostEnvironmentKey];
             if (string.IsNullOrWhiteSpace(hostname))
             {
                 var configSection = ApplicationConfig.GetSection(TransmissionSectionKey);
